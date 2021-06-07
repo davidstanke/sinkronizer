@@ -45,7 +45,7 @@ func main() {
 	fmt.Printf("Logged: %v\n", text)
 }
 
-func fetchLogs(ctx context.Context, adminClient *logging.Client) ([]*logging.Entry, error) {
+func fetchLogs(ctx context.Context, adminClient *logging.Client, projID string) ([]*logging.Entry, error) {
 	var entries []*logging.Entry
 	const name = "log-example"
 	lastHour := time.Now().Add(-1 * time.Hour).Format(time.RFC3339)
