@@ -18,41 +18,59 @@ func main() {
 	// Sets your Google Cloud Platform project ID.
 	projectID := "stanke-sandbox-2020-10"
 
-	// Creates a client.
-	client, err := logging.NewClient(ctx, projectID)
-	if err != nil {
-		log.Fatalf("Failed to create client: %v", err)
-	}
+	// // Creates a client.
+	// client, err := logging.NewClient(ctx, projectID)
+	// if err != nil {
+	// 	log.Fatalf("Failed to create client: %v", err)
+	// }
 
 	// Sets the name of the log to write to.
 	logName := "stdout"
 
 	// Selects the log to write to.
-	logger := client.Logger(logName)
+	// logger := client.Logger(logName)
 
 	// Sets the data to log.
-	text := "Hello, world!"
+	// text := "Hello, world!"
 
 	// Adds an entry to the log buffer.
-	logger.Log(logging.Entry{Payload: text})
+	// logger.Log(logging.Entry{Payload: text})
 
 	// Closes the client and flushes the buffer to the Cloud Logging
 	// service.
-	if err := client.Close(); err != nil {
-		log.Fatalf("Failed to close client: %v", err)
+	// if err := client.Close(); err != nil {
+	// 	log.Fatalf("Failed to close client: %v", err)
+	// }
+
+	// fmt.Printf("Logged: %v\n", text)
+
+	entries, err := fetchLogs(ctx, projectID, logName)
+
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	fmt.Printf("Logged: %v\n", text)
+	fmt.Println(entries)
+
+	for _, entry := range entries {
+		fmt.Println(entry)
+	}
+
 }
 
-func fetchLogs(ctx context.Context, adminClient *logging.Client, projID string) ([]*logging.Entry, error) {
+func fetchLogs(ctx context.Context, projID string, logName string) ([]*logging.Entry, error) {
 	var entries []*logging.Entry
-	const name = "log-example"
 	lastHour := time.Now().Add(-1 * time.Hour).Format(time.RFC3339)
+
+	adminClient, err := logadmin.NewClient(ctx, projID)
+	if err != nil {
+		log.Fatalf("Failed to create logadmin client: %v", err)
+	}
+	defer adminClient.Close()
 
 	iter := adminClient.Entries(ctx,
 		// Only get entries from the "log-example" log within the last hour.
-		logadmin.Filter(fmt.Sprintf(`logName = "projects/%s/logs/%s" AND timestamp > "%s"`, projID, name, lastHour)),
+		logadmin.Filter(fmt.Sprintf(`logName = "projects/%s/logs/%s" AND timestamp > "%s"`, projID, logName, lastHour)),
 		// Get most recent entries first.
 		logadmin.NewestFirst(),
 	)
